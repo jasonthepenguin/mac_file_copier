@@ -62,20 +62,6 @@ class CodeFileCopier:
         self.ext_frame.grid(row=1, column=0, pady=(0, 15), sticky="ew")
         self.ext_frame.grid_columnconfigure(1, weight=1)
         
-        # Add search frame after extensions frame
-        self.search_frame = ttk.Frame(self.main_frame)
-        self.search_frame.grid(row=2, column=0, pady=(0, 15), sticky="ew")
-        self.search_frame.grid_columnconfigure(1, weight=1)
-        
-        self.search_label = ttk.Label(self.search_frame, text="Search:")
-        self.search_label.grid(row=0, column=0, padx=5, sticky="w")
-        
-        self.search_entry = tk.Entry(self.search_frame, bg='#2d2d2d', fg='#d4d4d4',
-                                   insertbackground='white', relief='flat')
-        self.search_entry.grid(row=0, column=1, padx=5, sticky="ew")
-        self.search_entry.config(bd=1, highlightthickness=1, highlightbackground='#404040')
-        self.search_entry.bind('<KeyRelease>', self.filter_files)
-        
         self.ext_label = ttk.Label(self.ext_frame, text="File extensions:")
         self.ext_label.grid(row=0, column=0, padx=5, sticky="w")
         
@@ -86,7 +72,7 @@ class CodeFileCopier:
         
         # Ignored folders
         self.ignore_frame = ttk.Frame(self.main_frame)
-        self.ignore_frame.grid(row=3, column=0, pady=(0, 15), sticky="ew")
+        self.ignore_frame.grid(row=2, column=0, pady=(0, 15), sticky="ew")
         self.ignore_frame.grid_columnconfigure(1, weight=1)
         
         self.ignore_label = ttk.Label(self.ignore_frame, text="Ignore folders:")
@@ -99,8 +85,8 @@ class CodeFileCopier:
         
         # File list
         self.list_frame = ttk.Frame(self.main_frame)
-        self.list_frame.grid(row=4, column=0, pady=(0, 15), sticky="nsew")
-        self.main_frame.grid_rowconfigure(4, weight=1)
+        self.list_frame.grid(row=3, column=0, pady=(0, 15), sticky="nsew")
+        self.main_frame.grid_rowconfigure(3, weight=1)
         self.list_frame.grid_columnconfigure(0, weight=1)
         
         self.scrollbar = tk.Scrollbar(self.list_frame, bg='#2d2d2d', 
@@ -124,7 +110,7 @@ class CodeFileCopier:
         
         # Buttons frame
         self.btn_frame = ttk.Frame(self.main_frame)
-        self.btn_frame.grid(row=5, column=0, pady=(0, 10), sticky="ew")
+        self.btn_frame.grid(row=4, column=0, pady=(0, 10), sticky="ew")
         self.btn_frame.grid_columnconfigure(0, weight=1)
         self.btn_frame.grid_columnconfigure(1, weight=1)
         
@@ -134,9 +120,23 @@ class CodeFileCopier:
         self.refresh_btn = ttk.Button(self.btn_frame, text="Refresh", command=self.refresh_list)
         self.refresh_btn.grid(row=0, column=1, padx=5, sticky="ew")
         
-        # Status label
+        # Search frame (moved from row 2 to row 6)
+        self.search_frame = ttk.Frame(self.main_frame)
+        self.search_frame.grid(row=6, column=0, pady=(0, 10), sticky="ew")
+        self.search_frame.grid_columnconfigure(1, weight=1)
+        
+        self.search_label = ttk.Label(self.search_frame, text="Search:")
+        self.search_label.grid(row=0, column=0, padx=5, sticky="w")
+        
+        self.search_entry = tk.Entry(self.search_frame, bg='#2d2d2d', fg='#d4d4d4',
+                                   insertbackground='white', relief='flat')
+        self.search_entry.grid(row=0, column=1, padx=5, sticky="ew")
+        self.search_entry.config(bd=1, highlightthickness=1, highlightbackground='#404040')
+        self.search_entry.bind('<KeyRelease>', self.filter_files)
+        
+        # Status label (moved to row 7)
         self.status_label = ttk.Label(self.main_frame, text="")
-        self.status_label.grid(row=6, column=0, pady=5, sticky="ew")
+        self.status_label.grid(row=7, column=0, pady=5, sticky="ew")
         
         # Add subtle border to entries
         for entry in (self.ext_entry, self.ignore_entry):
