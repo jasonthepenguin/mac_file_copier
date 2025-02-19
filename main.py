@@ -8,7 +8,7 @@ from Foundation import NSURL
 class CodeFileCopier:
     def __init__(self, root):
         self.root = root
-        self.root.title("Code File Copier")
+        self.root.title("Fake Ass Cursor")
         self.root.attributes('-topmost', True)
         self.current_dir = None
         self.file_paths = {}
@@ -62,6 +62,20 @@ class CodeFileCopier:
         self.ext_frame.grid(row=1, column=0, pady=(0, 15), sticky="ew")
         self.ext_frame.grid_columnconfigure(1, weight=1)
         
+        # Add search frame after extensions frame
+        self.search_frame = ttk.Frame(self.main_frame)
+        self.search_frame.grid(row=2, column=0, pady=(0, 15), sticky="ew")
+        self.search_frame.grid_columnconfigure(1, weight=1)
+        
+        self.search_label = ttk.Label(self.search_frame, text="Search:")
+        self.search_label.grid(row=0, column=0, padx=5, sticky="w")
+        
+        self.search_entry = tk.Entry(self.search_frame, bg='#2d2d2d', fg='#d4d4d4',
+                                   insertbackground='white', relief='flat')
+        self.search_entry.grid(row=0, column=1, padx=5, sticky="ew")
+        self.search_entry.config(bd=1, highlightthickness=1, highlightbackground='#404040')
+        self.search_entry.bind('<KeyRelease>', self.filter_files)
+        
         self.ext_label = ttk.Label(self.ext_frame, text="File extensions:")
         self.ext_label.grid(row=0, column=0, padx=5, sticky="w")
         
@@ -72,7 +86,7 @@ class CodeFileCopier:
         
         # Ignored folders
         self.ignore_frame = ttk.Frame(self.main_frame)
-        self.ignore_frame.grid(row=2, column=0, pady=(0, 15), sticky="ew")
+        self.ignore_frame.grid(row=3, column=0, pady=(0, 15), sticky="ew")
         self.ignore_frame.grid_columnconfigure(1, weight=1)
         
         self.ignore_label = ttk.Label(self.ignore_frame, text="Ignore folders:")
@@ -85,8 +99,8 @@ class CodeFileCopier:
         
         # File list
         self.list_frame = ttk.Frame(self.main_frame)
-        self.list_frame.grid(row=3, column=0, pady=(0, 15), sticky="nsew")
-        self.main_frame.grid_rowconfigure(3, weight=1)
+        self.list_frame.grid(row=4, column=0, pady=(0, 15), sticky="nsew")
+        self.main_frame.grid_rowconfigure(4, weight=1)
         self.list_frame.grid_columnconfigure(0, weight=1)
         
         self.scrollbar = tk.Scrollbar(self.list_frame, bg='#2d2d2d', 
@@ -101,15 +115,16 @@ class CodeFileCopier:
                                   selectforeground='#ffffff',
                                   highlightthickness=0,
                                   borderwidth=0,
-                                  height=25,  # Increased height
-                                  font=('Helvetica', 12))  # Increased font size
+                                  height=25,
+                                  font=('Helvetica', 12),
+                                  exportselection=0)
         self.file_list.grid(row=0, column=0, sticky="nsew")
         self.file_list.config(yscrollcommand=self.scrollbar.set)
         self.scrollbar.config(command=self.file_list.yview)
         
         # Buttons frame
         self.btn_frame = ttk.Frame(self.main_frame)
-        self.btn_frame.grid(row=4, column=0, pady=(0, 10), sticky="ew")
+        self.btn_frame.grid(row=5, column=0, pady=(0, 10), sticky="ew")
         self.btn_frame.grid_columnconfigure(0, weight=1)
         self.btn_frame.grid_columnconfigure(1, weight=1)
         
@@ -121,7 +136,7 @@ class CodeFileCopier:
         
         # Status label
         self.status_label = ttk.Label(self.main_frame, text="")
-        self.status_label.grid(row=5, column=0, pady=5, sticky="ew")
+        self.status_label.grid(row=6, column=0, pady=5, sticky="ew")
         
         # Add subtle border to entries
         for entry in (self.ext_entry, self.ignore_entry):
@@ -168,27 +183,61 @@ class CodeFileCopier:
             self.file_list.insert(tk.END, "No matching files found")
             return
             
-        # Store full paths for copying (class instance variable)
+        # Store the full file data for filtering
+        self.all_files_data = []
         self.file_paths = {}
         current_index = 0
             
         for ext in sorted(code_files_by_ext.keys()):
             header = f"=== {ext.upper()[1:]} Files ==="
+            self.all_files_data.append(("header", header, None))
             self.file_list.insert(tk.END, header)
             current_index += 1
             
             sorted_files = sorted(code_files_by_ext[ext])
             for file_path in sorted_files:
-                # Get just the filename
                 filename = os.path.basename(file_path)
+                self.all_files_data.append(("file", filename, file_path))
                 self.file_list.insert(tk.END, f"  {filename}")
-                # Store the mapping between listbox index and full path
                 self.file_paths[current_index] = file_path
                 current_index += 1
                 
+            self.all_files_data.append(("spacer", "", None))
             self.file_list.insert(tk.END, "")
             current_index += 1
+
+    def filter_files(self, event=None):
+        search_term = self.search_entry.get().lower()
+        
+        # Remember selected filenames before clearing
+        selected_indices = self.file_list.curselection()
+        selected_files = {self.file_list.get(i).strip() for i in selected_indices}
+        
+        self.file_list.delete(0, tk.END)
+        
+        if not hasattr(self, 'all_files_data'):
+            return
             
+        self.file_paths = {}
+        current_index = 0
+        current_ext = None
+        has_matches = False
+        
+        for item_type, text, file_path in self.all_files_data:
+            if item_type == "file":
+                if search_term in text.lower():
+                    if not has_matches:
+                        has_matches = True
+                    self.file_list.insert(tk.END, f"  {text}")
+                    self.file_paths[current_index] = file_path
+                    # Restore selection if this file was previously selected
+                    if text in selected_files:
+                        self.file_list.selection_set(current_index)
+                    current_index += 1
+        
+        if not has_matches:
+            self.file_list.insert(tk.END, "No matching files found")
+
     def copy_files(self):
         if not self.current_dir:
             self.status_label.config(text="No directory selected")
